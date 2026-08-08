@@ -167,22 +167,23 @@ function router_switch_module(module_name)
         state.active_module = module_name;
         fig.user_data = state;
         
+        mprintf("[INIT] Showing Swing panel container: %s\n", module_name);
+        // 1. Show the Swing uicontrol panel first — Swing must own the surface before
+        //    OpenGL can paint into it. Showing panel before axes avoids blank canvases.
+        ui_set_panel_visible(state, module_name, "on");
+        
         if is_new_ws then
+            // 2. Configure Swing controls now that the parent panel is visible
             ui_configure_workspace(module_name, state);
         end
         
         mprintf("[INIT] Rendering plots...\n");
         mprintf("[INIT] Rendering educational panel...\n");
-        // 4. Run DSP pipeline to update data
+        // 3. Run DSP pipeline to update data
         pipeline_update(run_dsp_stage);
         
-        mprintf("[INIT] Showing Swing panel container: %s\n", module_name);
-        // 5. Show the Swing uicontrol panel first — Swing must own the surface before
-        //    OpenGL can paint into it. Showing panel before axes avoids blank canvases.
-        ui_set_panel_visible(state, module_name, "on");
-        
         mprintf("[INIT] Revealing OpenGL plots and flushing screen...\n");
-        // 6. Now that the panel surface exists, show axes and flush OpenGL
+        // 4. Now that the panel surface exists, show axes and flush OpenGL
         ui_set_axes_visible(state, module_name, "on");
         drawnow();
         mprintf("[TIMING] drawnow count: 1\n");
@@ -312,6 +313,28 @@ function ui_set_panel_visible(state, module_name, is_visible_str)
     end
 endfunction
 
+function helper_set_axis_visible(ax, is_visible_str)
+    if is_valid_handle(ax) then
+        ax.visible = is_visible_str;
+        for i = 1:size(ax.children, "*")
+            child = ax.children(i);
+            if is_valid_handle(child) & child.type == "Compound" then
+                child.visible = is_visible_str;
+                if is_visible_str == "on" then
+                    for j = 1:size(child.children, "*")
+                        subchild = child.children(j);
+                        if is_valid_handle(subchild) & subchild.type == "Polyline" then
+                            if subchild.visible <> "off" then
+                                subchild.visible = "on";
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+endfunction
+
 function ui_set_axes_visible(state, module_name, is_visible_str)
     // Toggles visibility of OpenGL axes graphic entities specifically.
     resolved_name = module_name;
@@ -327,37 +350,37 @@ function ui_set_axes_visible(state, module_name, is_visible_str)
     case "signal_generator"
         if isfield(state.ui, "signal_axes") then
             ax = state.ui.signal_axes;
-            if is_valid_handle(ax) then ax.visible = is_visible_str; end
+            helper_set_axis_visible(ax, is_visible_str);
         end
         
     case "sampling"
         if isfield(state.ui, "sampling_axes_recon") then
             ax1 = state.ui.sampling_axes_recon;
-            if is_valid_handle(ax1) then ax1.visible = is_visible_str; end
+            helper_set_axis_visible(ax1, is_visible_str);
         end
         if isfield(state.ui, "sampling_axes_stems") then
             ax2 = state.ui.sampling_axes_stems;
-            if is_valid_handle(ax2) then ax2.visible = is_visible_str; end
+            helper_set_axis_visible(ax2, is_visible_str);
         end
         
     case "quantization"
         if isfield(state.ui, "quant_axes_stair") then
             ax1 = state.ui.quant_axes_stair;
-            if is_valid_handle(ax1) then ax1.visible = is_visible_str; end
+            helper_set_axis_visible(ax1, is_visible_str);
         end
         if isfield(state.ui, "quant_axes_error") then
             ax2 = state.ui.quant_axes_error;
-            if is_valid_handle(ax2) then ax2.visible = is_visible_str; end
+            helper_set_axis_visible(ax2, is_visible_str);
         end
         
     case "pcm"
         if isfield(state.ui, "pcm_axes_recon") then
             ax1 = state.ui.pcm_axes_recon;
-            if is_valid_handle(ax1) then ax1.visible = is_visible_str; end
+            helper_set_axis_visible(ax1, is_visible_str);
         end
         if isfield(state.ui, "pcm_axes_bits") then
             ax2 = state.ui.pcm_axes_bits;
-            if is_valid_handle(ax2) then ax2.visible = is_visible_str; end
+            helper_set_axis_visible(ax2, is_visible_str);
         end
     end
 endfunction

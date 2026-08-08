@@ -39,13 +39,14 @@ function ui_create_persistent_workspace(fig, parent_workspace_panel)
     ax_left = newaxes(c_plot.frame);
     ax_left.axes_bounds = [0.05, 0.12, 0.41, 0.72];
     style_axes_dark(ax_left);
-    ax_left.visible = "off";
+    ax_left.visible = "on"; // Explicitly on during creation
     
     // - Create Curve Line 1 (left axes)
     plot2d(0, 0);
     h_line_left1 = ax_left.children(1).children(1);
     set(h_line_left1, "foreground", color(colors.accent_cyan(1)*255, colors.accent_cyan(2)*255, colors.accent_cyan(3)*255));
     set(h_line_left1, "thickness", 2);
+    set(h_line_left1, "visible", "on"); // Explicitly visible
     
     // - Create Curve Line 2 (left axes)
     plot2d(0, 0);
@@ -53,24 +54,33 @@ function ui_create_persistent_workspace(fig, parent_workspace_panel)
     set(h_line_left2, "foreground", color(colors.accent_red(1)*255, colors.accent_red(2)*255, colors.accent_red(3)*255));
     set(h_line_left2, "thickness", 1.5);
     set(h_line_left2, "line_style", 2);
+    set(h_line_left2, "visible", "on"); // Explicitly visible
+    
+    // Set left axes visible to off AFTER child creation
+    ax_left.visible = "off";
     
     // 5. Pre-allocate Right Axes and curves
     ax_right = newaxes(c_plot.frame);
     ax_right.axes_bounds = [0.54, 0.12, 0.41, 0.72];
     style_axes_dark(ax_right);
-    ax_right.visible = "off";
+    ax_right.visible = "on"; // Explicitly on during creation
     
     // - Create Curve Line 1 (right axes)
     plot2d(0, 0);
     h_line_right1 = ax_right.children(1).children(1);
     set(h_line_right1, "foreground", color(colors.accent_blue(1)*255, colors.accent_blue(2)*255, colors.accent_blue(3)*255));
     set(h_line_right1, "thickness", 1.5);
+    set(h_line_right1, "visible", "on"); // Explicitly visible
     
     // - Create Curve Line 2 (right axes)
     plot2d(0, 0);
     h_line_right2 = ax_right.children(1).children(1);
     set(h_line_right2, "foreground", color(colors.accent_green(1)*255, colors.accent_green(2)*255, colors.accent_green(3)*255));
     set(h_line_right2, "thickness", 1.5);
+    set(h_line_right2, "visible", "on"); // Explicitly visible
+    
+    // Set right axes visible to off AFTER child creation
+    ax_right.visible = "off";
     
     // - Expand Plot magnifying glass button next to card title
     h_expand_btn = uicontrol(h_workspace, ...
@@ -139,6 +149,8 @@ function ui_create_persistent_workspace(fig, parent_workspace_panel)
         "title", h_lbl_title, ...
         "plot_card", c_plot.frame, ...
         "ctrl_card", c_ctrl.frame, ...
+        "plot_card_hdr", c_plot.header, ...
+        "ctrl_card_hdr", c_ctrl.header, ...
         "ax_left", ax_left, ...
         "ax_right", ax_right, ...
         "line_left1", h_line_left1, ...
@@ -232,14 +244,17 @@ function ui_configure_workspace(module_name, state)
         set(w.title, "string", "1. Analog Message Source Generator");
         
         // 2. Axes Configuration: Left Axes occupies full card width
+        if isfield(w, "plot_card_hdr") then set(w.plot_card_hdr, "string", "Time-Domain Message Waveform"); end
         set(w.plot_card, "string", "Time-Domain Message Waveform");
         w.ax_left.axes_bounds = [0.06, 0.12, 0.90, 0.72];
         
         // Restore left axes lines to standard styles
         set(w.line_left1, "line_style", 1);
+        set(w.line_left1, "visible", "on"); // Explicitly set primary line visible
         set(w.line_left2, "visible", "off");
         
         // 3. Reusable Controls Visibility & Configuration
+        if isfield(w, "ctrl_card_hdr") then set(w.ctrl_card_hdr, "string", "Signal Parameters Configuration"); end
         set(w.ctrl_card, "string", "Signal Parameters Configuration");
         
         // - Slider 1 (Amplitude)
@@ -304,6 +319,7 @@ function ui_configure_workspace(module_name, state)
         set(w.title, "string", "2. Uniform Sampling & Whittaker Sinc Reconstruction");
         
         // 2. Axes Configuration: Dual plot mode
+        if isfield(w, "plot_card_hdr") then set(w.plot_card_hdr, "string", "Reconstruction Fidelity vs. Discrete Sample Stems"); end
         set(w.plot_card, "string", "Reconstruction Fidelity vs. Discrete Sample Stems");
         w.ax_left.axes_bounds = [0.05, 0.12, 0.41, 0.72];
         w.ax_right.axes_bounds = [0.54, 0.12, 0.41, 0.72];
@@ -311,12 +327,14 @@ function ui_configure_workspace(module_name, state)
         // Restore standard styles for Sampling curves
         set(w.line_left1, "foreground", color(colors.accent_cyan(1)*255, colors.accent_cyan(2)*255, colors.accent_cyan(3)*255));
         set(w.line_left1, "line_style", 1);
+        set(w.line_left1, "visible", "on"); // Explicitly set primary line visible
         set(w.line_left2, "visible", "on");
         set(w.line_left2, "line_style", 2);
         
         // Configure stems style for right axes Line 1
         set(w.line_right1, "polyline_style", 3);
         set(w.line_right1, "foreground", color(colors.accent_blue(1)*255, colors.accent_blue(2)*255, colors.accent_blue(3)*255));
+        set(w.line_right1, "visible", "on"); // Explicitly set primary line visible
         
         // Configure circular dots (markers-only) style for right axes Line 2.
         // polyline_style=0 is invalid in Scilab 2025 (range is 1-7).
@@ -329,6 +347,7 @@ function ui_configure_workspace(module_name, state)
         set(w.line_right2, "visible", "on");
         
         // 3. Reusable Controls Visibility & Configuration
+        if isfield(w, "ctrl_card_hdr") then set(w.ctrl_card_hdr, "string", "Sampling Configuration & Live Nyquist Monitor"); end
         set(w.ctrl_card, "string", "Sampling Configuration & Live Nyquist Monitor");
         
         // - Slider 1 (Sampling fs) - Occupies left half vertically centered
@@ -360,6 +379,7 @@ function ui_configure_workspace(module_name, state)
         set(w.title, "string", "3. Signal Quantization (Uniform vs. Non-uniform companding)");
         
         // 2. Axes Configuration: Dual plot mode
+        if isfield(w, "plot_card_hdr") then set(w.plot_card_hdr, "string", "Quantized Staircase & Estimation Noise Residuals"); end
         set(w.plot_card, "string", "Quantized Staircase & Estimation Noise Residuals");
         w.ax_left.axes_bounds = [0.05, 0.12, 0.41, 0.72];
         w.ax_right.axes_bounds = [0.54, 0.12, 0.41, 0.72];
@@ -367,6 +387,7 @@ function ui_configure_workspace(module_name, state)
         // Restore standard styles for Quantization curves
         set(w.line_left1, "foreground", color(colors.accent_cyan(1)*255, colors.accent_cyan(2)*255, colors.accent_cyan(3)*255));
         set(w.line_left1, "line_style", 1);
+        set(w.line_left1, "visible", "on"); // Explicitly set primary line visible
         set(w.line_left2, "visible", "on");
         set(w.line_left2, "line_style", 1); // staircase is solid line
         set(w.line_left2, "foreground", color(colors.accent_yellow(1)*255, colors.accent_yellow(2)*255, colors.accent_yellow(3)*255));
@@ -374,6 +395,7 @@ function ui_configure_workspace(module_name, state)
         // Configure error curve style for right axes Line 1
         set(w.line_right1, "polyline_style", 1); // solid error curve
         set(w.line_right1, "foreground", color(colors.accent_red(1)*255, colors.accent_red(2)*255, colors.accent_red(3)*255));
+        set(w.line_right1, "visible", "on"); // Explicitly set primary line visible
         
         // Hide right axes Line 2 (not used). Reset mark/line mode so it can be
         // reused as a standard line when the workspace switches to another module.
@@ -382,6 +404,7 @@ function ui_configure_workspace(module_name, state)
         set(w.line_right2, "visible", "off");
         
         // 3. Reusable Controls Visibility & Configuration
+        if isfield(w, "ctrl_card_hdr") then set(w.ctrl_card_hdr, "string", "Quantization Parameters & SQNR Performance Analysis"); end
         set(w.ctrl_card, "string", "Quantization Parameters & SQNR Performance Analysis");
         
         // Map L levels to discrete index [1..6] representing [2, 4, 8, 16, 32, 64]
@@ -434,6 +457,7 @@ function ui_configure_workspace(module_name, state)
         set(w.title, "string", "4. Pulse Code Modulation (PCM) Encoder & Link Budget");
         
         // 2. Axes Configuration: Dual plot mode
+        if isfield(w, "plot_card_hdr") then set(w.plot_card_hdr, "string", "PCM Reconstructed Waveform & Serialized Logic Bitstream"); end
         set(w.plot_card, "string", "PCM Reconstructed Waveform & Serialized Logic Bitstream");
         w.ax_left.axes_bounds = [0.05, 0.12, 0.41, 0.72];
         w.ax_right.axes_bounds = [0.54, 0.12, 0.41, 0.72];
@@ -441,6 +465,7 @@ function ui_configure_workspace(module_name, state)
         // Restore standard styles for PCM curves
         set(w.line_left1, "foreground", color(colors.accent_cyan(1)*255, colors.accent_cyan(2)*255, colors.accent_cyan(3)*255));
         set(w.line_left1, "line_style", 1);
+        set(w.line_left1, "visible", "on"); // Explicitly set primary line visible
         set(w.line_left2, "visible", "on");
         set(w.line_left2, "line_style", 2);
         set(w.line_left2, "foreground", color(colors.accent_red(1)*255, colors.accent_red(2)*255, colors.accent_red(3)*255));
@@ -448,6 +473,7 @@ function ui_configure_workspace(module_name, state)
         // Configure bits curve style for right axes Line 1
         set(w.line_right1, "polyline_style", 1); // solid digital bits line
         set(w.line_right1, "foreground", color(colors.accent_green(1)*255, colors.accent_green(2)*255, colors.accent_green(3)*255));
+        set(w.line_right1, "visible", "on"); // Explicitly set primary line visible
         
         // Hide right axes Line 2 (not used). Reset mark/line mode so it can be
         // reused as a standard line when the workspace switches to another module.
@@ -456,6 +482,7 @@ function ui_configure_workspace(module_name, state)
         set(w.line_right2, "visible", "off");
         
         // 3. Reusable Controls Visibility & Configuration
+        if isfield(w, "ctrl_card_hdr") then set(w.ctrl_card_hdr, "string", "PCM Binary Word Mapping & Link Budget Statistics"); end
         set(w.ctrl_card, "string", "PCM Binary Word Mapping & Link Budget Statistics");
         
         // - Hide all Sliders & Dropdowns (PCM only uses lists & metrics text)
