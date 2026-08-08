@@ -141,6 +141,35 @@ function ui_render_signal_generator(state)
     
     if ~is_valid_handle(ax) | ~is_valid_handle(h_line) then return; end
     
+    printf("\n[SIGNAL DEBUG]\n");
+    printf("  Amplitude = %.2f V\n", state.params.signal.amp);
+    printf("  Frequency = %.2f Hz\n", state.params.signal.freq);
+    printf("  Phase = %.2f deg\n", state.params.signal.phase);
+    printf("  Waveform = %s\n", state.params.signal.type);
+    printf("  Time samples = %d\n", size(state.data.time, "*"));
+    printf("  Signal samples = %d\n", size(state.data.analog_waveform, "*"));
+    if ~isempty(state.data.analog_waveform) then
+        printf("  Signal min = %.3f V\n", min(state.data.analog_waveform));
+        printf("  Signal max = %.3f V\n", max(state.data.analog_waveform));
+    else
+        printf("  Signal min = [empty]\n");
+        printf("  Signal max = [empty]\n");
+    end
+    printf("  Plot handle valid = %s\n", string(is_valid_handle(h_line)));
+    if is_valid_handle(h_line) then
+        printf("  Plot visible = %s\n", h_line.visible);
+        if is_valid_handle(h_line.parent) then
+            printf("  Parent Compound visible = %s\n", h_line.parent.visible);
+        end
+    else
+        printf("  Plot visible = [invalid]\n");
+    end
+    printf("  Axes handle valid = %s\n", string(is_valid_handle(ax)));
+    if is_valid_handle(ax) then
+        printf("  Axes visible = %s\n", ax.visible);
+    end
+    printf("\n");
+    
     // 2. Synchronize Slider Value Displays
     set(w.amp_value, "string", sprintf("%.2f V", state.params.signal.amp));
     set(w.freq_value, "string", sprintf("%.2f Hz", state.params.signal.freq));
