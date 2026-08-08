@@ -48,6 +48,8 @@ endfunction
 
 function ui_render_education(module_name, state); endfunction
 
+
+
 function router_switch_module(module_name)
     // Swaps the active workspace panel, updates sidebar state, and redraws plots.
     // Inputs:
@@ -105,15 +107,15 @@ function router_switch_module(module_name)
         end
     end
     
-    // Start atomic transition rendering
+    // Start module transition
     tic();
-    drawlater();
     
     is_old_ws = is_workspace_module(old_module);
     is_new_ws = is_workspace_module(module_name);
     
     if is_old_ws & is_new_ws then
         mprintf("[INIT] Switching in-place inside persistent workspace...\n");
+        // 1. Hide old axes before reconfiguring
         ui_set_axes_visible(state, old_module, "off");
         
         // 2. Update sidebar buttons styling
@@ -130,23 +132,24 @@ function router_switch_module(module_name)
         state.active_module = module_name;
         fig.user_data = state;
         
-        // Configure workspace layout and widgets in place
+        // 4. Configure workspace layout and widgets in place
         ui_configure_workspace(module_name, state);
         
         mprintf("[INIT] Rendering plots...\n");
         mprintf("[INIT] Rendering educational panel...\n");
-        // 4. Force update of the workspace plotting area and theory card
+        // 5. Run DSP pipeline to update data for the new module
         pipeline_update(run_dsp_stage);
         
         mprintf("[INIT] Revealing OpenGL plots and flushing screen...\n");
-        // 5. Show the new axes and trigger exactly one final drawnow repaint
+        // 6. Make new axes visible, then flush (panel is already shown)
         ui_set_axes_visible(state, module_name, "on");
         drawnow();
         mprintf("[TIMING] drawnow count: 1\n");
     else
         mprintf("[INIT] Hiding old module: %s\n", old_module);
-        ui_set_panel_visible(state, old_module, "off");
+        // 1. Hide old module panel and axes completely
         ui_set_axes_visible(state, old_module, "off");
+        ui_set_panel_visible(state, old_module, "off");
         
         mprintf("[INIT] Attaching callbacks and updating parameters for: %s\n", module_name);
         
@@ -170,18 +173,16 @@ function router_switch_module(module_name)
         
         mprintf("[INIT] Rendering plots...\n");
         mprintf("[INIT] Rendering educational panel...\n");
-        // 4. Force update of the workspace plotting area and theory card
+        // 4. Run DSP pipeline to update data
         pipeline_update(run_dsp_stage);
         
         mprintf("[INIT] Showing Swing panel container: %s\n", module_name);
-        // 5. Show Swing panel uicontrol container first (axes remain hidden)
+        // 5. Show the Swing uicontrol panel first — Swing must own the surface before
+        //    OpenGL can paint into it. Showing panel before axes avoids blank canvases.
         ui_set_panel_visible(state, module_name, "on");
         
-        // Yield Scilab interpreter thread for 25ms to let Swing EDT paint controls
-        sleep(25);
-        
         mprintf("[INIT] Revealing OpenGL plots and flushing screen...\n");
-        // 6. Show the new axes and trigger exactly one final drawnow repaint
+        // 6. Now that the panel surface exists, show axes and flush OpenGL
         ui_set_axes_visible(state, module_name, "on");
         drawnow();
         mprintf("[TIMING] drawnow count: 1\n");

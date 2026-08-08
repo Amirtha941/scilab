@@ -122,6 +122,8 @@ function sampling_create_panel(fig, workspace_panel)
     style_control(h_status_lbl, "label");
     set(h_status_lbl, "BackgroundColor", colors.bg_panel);
     set(h_status_lbl, "ForegroundColor", colors.text_primary);
+    set(h_status_lbl, "FontName", "monospaced");
+    set(h_status_lbl, "FontSize", 8);
     t_widgets = toc() * 1000;
     log_timing("Sampling - Widgets & Sliders Setup", t_widgets);
     

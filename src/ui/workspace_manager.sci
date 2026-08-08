@@ -129,6 +129,8 @@ function ui_create_persistent_workspace(fig, parent_workspace_panel)
     style_control(h_edit2, "label");
     set(h_edit2, "BackgroundColor", colors.bg_panel);
     set(h_edit2, "ForegroundColor", colors.text_primary);
+    set(h_edit2, "FontName", "monospaced");
+    set(h_edit2, "FontSize", 8);
     set(h_edit2, "visible", "off");
     
     // 8. Cache persistent handles in state.ui.workspace
@@ -316,9 +318,13 @@ function ui_configure_workspace(module_name, state)
         set(w.line_right1, "polyline_style", 3);
         set(w.line_right1, "foreground", color(colors.accent_blue(1)*255, colors.accent_blue(2)*255, colors.accent_blue(3)*255));
         
-        // Configure circular dots style for right axes Line 2
-        set(w.line_right2, "polyline_style", 0);
-        set(w.line_right2, "style", -9);
+        // Configure circular dots (markers-only) style for right axes Line 2.
+        // polyline_style=0 is invalid in Scilab 2025 (range is 1-7).
+        // The correct way for marks-only display is: line_mode off, mark_mode on.
+        set(w.line_right2, "line_mode", "off");
+        set(w.line_right2, "mark_mode", "on");
+        set(w.line_right2, "mark_style", 9);   // 9 = open circle marker
+        set(w.line_right2, "mark_size", 4);
         set(w.line_right2, "foreground", color(colors.accent_green(1)*255, colors.accent_green(2)*255, colors.accent_green(3)*255));
         set(w.line_right2, "visible", "on");
         
@@ -369,7 +375,10 @@ function ui_configure_workspace(module_name, state)
         set(w.line_right1, "polyline_style", 1); // solid error curve
         set(w.line_right1, "foreground", color(colors.accent_red(1)*255, colors.accent_red(2)*255, colors.accent_red(3)*255));
         
-        // Hide right axes Line 2 (not used)
+        // Hide right axes Line 2 (not used). Reset mark/line mode so it can be
+        // reused as a standard line when the workspace switches to another module.
+        set(w.line_right2, "mark_mode", "off");
+        set(w.line_right2, "line_mode", "on");
         set(w.line_right2, "visible", "off");
         
         // 3. Reusable Controls Visibility & Configuration
@@ -440,7 +449,10 @@ function ui_configure_workspace(module_name, state)
         set(w.line_right1, "polyline_style", 1); // solid digital bits line
         set(w.line_right1, "foreground", color(colors.accent_green(1)*255, colors.accent_green(2)*255, colors.accent_green(3)*255));
         
-        // Hide right axes Line 2 (not used)
+        // Hide right axes Line 2 (not used). Reset mark/line mode so it can be
+        // reused as a standard line when the workspace switches to another module.
+        set(w.line_right2, "mark_mode", "off");
+        set(w.line_right2, "line_mode", "on");
         set(w.line_right2, "visible", "off");
         
         // 3. Reusable Controls Visibility & Configuration
