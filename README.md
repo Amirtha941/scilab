@@ -4,6 +4,30 @@
 
 ---
 
+## 📷 GUI Screenshots
+
+### Main Platform Launcher
+The entry point dashboard allows students to choose between different planned engineering laboratories, resume their last active simulation experiment, and monitor platform version status:
+![GUIVerse Main Launcher Dashboard](docs/images/launcher_dashboard.png)
+
+### ECE Communication Laboratory Home
+The inner laboratory dashboard features a reactive system overview card, live metrics summary, and an interactive, clickable communication block diagram:
+![ECE Communication Laboratory Home](docs/images/comm_lab_home.png)
+
+### Analog Signal Generator
+Generates baseband continuous voltage waveforms (Cosine, Square, Triangle, and PRBS) with real-time controls and ECE parameters:
+![Analog Signal Generator Module](docs/images/analog_signal_generator.png)
+
+### Uniform Sampling & Whittaker Reconstruction
+Simulates discretization of analog signals and executes Whittaker-Shannon sinc interpolation to reconstruct the original wave:
+![Uniform Sampling & Whittaker Reconstruction Module](docs/images/sampling_reconstruction.png)
+
+### Uniform & Non-Uniform Quantization
+Quantizes sample amplitudes using Uniform Midrise, Uniform Midtread, or Non-uniform $\mu$-law companding, displaying quantization error waves:
+![Quantization Module](docs/images/quantization_module.png)
+
+---
+
 ## 🚀 Key Features
 
 GUIVerse v1.0 implements the first four primary stages of the physical layer communication link:
@@ -51,6 +75,13 @@ The application implements a custom **Single-window MVC-like pattern** designed 
 GUIVerse/
 ├── guiverse.sce              # Application entry point script
 ├── README.md                 # Project documentation and manual
+├── docs/
+│   └── images/               # Screenshots for documentation
+│       ├── launcher_dashboard.png
+│       ├── comm_lab_home.png
+│       ├── analog_signal_generator.png
+│       ├── sampling_reconstruction.png
+│       └── quantization_module.png
 ├── src/
 │   ├── core/
 │   │   ├── constants.sci     # DSP and mathematical constants
