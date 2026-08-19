@@ -155,7 +155,15 @@ function style_control(h, style_class)
 endfunction
 
 function h_fig = find_main_figure()
-    // Returns the current active figure handle directly.
-    // In our single-window setup, this is always the main GUI window.
-    h_fig = gcf();
+    // Locates the main figure by its unique tag
+    h_fig = findobj("tag", "commverse_main_figure");
+    if isempty(h_fig) then
+        // Fall back to gcf() ONLY if there is at least one open graphic window
+        ids = winsid();
+        if ~isempty(ids) then
+            h_fig = gcf();
+        else
+            h_fig = [];
+        end
+    end
 endfunction

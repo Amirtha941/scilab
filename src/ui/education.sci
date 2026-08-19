@@ -96,6 +96,30 @@ function ui_render_education(module_name, state)
                  "- Resizing the figure updates components smoothly."];
                  
     case "signal_generator"
+        // Calculate dynamic insights from state
+        amp = state.params.signal.amp;
+        freq = state.params.signal.freq;
+        w_type = state.params.signal.type;
+        w_type_str = w_type;
+        if w_type == "sine" then
+            w_type_str = "Sine";
+        elseif w_type == "square" then
+            w_type_str = "Square";
+        elseif w_type == "triangle" then
+            w_type_str = "Triangle";
+        elseif w_type == "prbs" then
+            w_type_str = "PRBS";
+        end
+        period_ms = 1000.0 / freq;
+        vpp = 2.0 * amp;
+        if w_type == "sine" then
+            vrms = amp / sqrt(2.0);
+        elseif w_type == "triangle" then
+            vrms = amp / sqrt(3.0);
+        else // square or prbs
+            vrms = amp;
+        end
+        
         lines = [lines;
                  "1. SIGNAL GENERATOR";
                  "";
@@ -119,9 +143,30 @@ function ui_render_education(module_name, state)
                  "";
                  "--- COMMON MISTAKES ---";
                  "- Forgetting that duty cycle affects average power.";
-                 "- Neglecting spectral leakage in FFT visualizations."];
+                 "- Neglecting spectral leakage in FFT visualizations.";
+                 "";
+                 "--- LIVE ENGINEERING INSIGHTS ---";
+                 sprintf("  Waveform Type      : %s", w_type_str);
+                 sprintf("  Amplitude (A)      : %.2f V", amp);
+                 sprintf("  Frequency (fm)     : %.2f Hz", freq);
+                 sprintf("  Time Period (T)    : %.2f ms", period_ms);
+                 sprintf("  Peak-to-Peak (Vpp) : %.2f V", vpp);
+                 sprintf("  RMS Value (Vrms)   : %.3f V", vrms)];
                  
     case "sampling"
+        // Calculate dynamic insights from state
+        fm = state.params.signal.freq;
+        fs = state.params.sampling.fs;
+        nyq_min = 2.0 * fm;
+        ts_ms = 1000.0 / fs;
+        ratio = fs / nyq_min;
+        rmse = state.data.reconstruction_error;
+        if fs < nyq_min then
+            status_str = "⚠ Aliasing Detected";
+        else
+            status_str = "✓ Nyquist Criterion Satisfied";
+        end
+        
         lines = [lines;
                  "2. SAMPLING & RECONSTRUCTION";
                  "";
@@ -150,9 +195,36 @@ function ui_render_education(module_name, state)
                  "--- COMMON MISTAKES ---";
                  "- Sampling below the Nyquist rate, which causes";
                  "  irreversible spectral overlap (aliasing).";
-                 "- Confusing Nyquist rate with actual sampling frequency."];
+                 "- Confusing Nyquist rate with actual sampling frequency.";
+                 "";
+                 "--- LIVE ENGINEERING INSIGHTS ---";
+                 sprintf("  Signal Freq (fm)    : %.2f Hz", fm);
+                 sprintf("  Sampling Freq (fs)  : %.2f Hz", fs);
+                 sprintf("  Nyquist Min (2*fm)  : %.2f Hz", nyq_min);
+                 sprintf("  Sampling Interval   : %.2f ms", ts_ms);
+                 sprintf("  Sampling Ratio      : %.3f", ratio);
+                 sprintf("  Nyquist Criterion   : %s", status_str);
+                 sprintf("  Reconstruction RMSE : %.3e V", rmse)];
                  
     case "quantization"
+        // Calculate dynamic insights from state
+        L = state.params.quantization.levels;
+        q_type = state.params.quantization.type;
+        amp = state.params.signal.amp;
+        N = round(log2(L));
+        delta = 2.0 * amp / L;
+        sqnr_meas = state.data.sqnr;
+        sqnr_theo = 1.76 + 6.02 * N;
+        max_err = max(abs(state.data.quantization_error));
+        q_type_str = q_type;
+        if q_type == "uniform_midrise" then
+            q_type_str = "Uniform Midrise";
+        elseif q_type == "uniform_midtread" then
+            q_type_str = "Uniform Midtread";
+        elseif q_type == "mu_law" then
+            q_type_str = sprintf("mu-law Companding (mu=%.1f)", state.params.quantization.mu);
+        end
+        
         lines = [lines;
                  "3. QUANTIZATION";
                  "";
@@ -180,9 +252,26 @@ function ui_render_education(module_name, state)
                  "--- COMMON MISTAKES ---";
                  "- Clipping input waveforms, which creates severe";
                  "  non-linear distortion (harmonic spikes).";
-                 "- Assuming SQNR remains constant for all signal types."];
+                 "- Assuming SQNR remains constant for all signal types.";
+                 "";
+                 "--- LIVE ENGINEERING INSIGHTS ---";
+                 sprintf("  Quantizer Type      : %s", q_type_str);
+                 sprintf("  Quantization Levels : %d", L);
+                 sprintf("  Bit Depth (N)       : %d bits", N);
+                 sprintf("  Step Size (Delta)   : %.4f V", delta);
+                 sprintf("  Represented Range   : [%.2f, %.2f] V", -amp, amp);
+                 sprintf("  Measured SQNR       : %.2f dB", sqnr_meas);
+                 sprintf("  Theoretical SQNR    : %.2f dB (Sine)", sqnr_theo);
+                 sprintf("  Max Absolute Error  : %.4f V", max_err)];
                  
     case "pcm"
+        // Calculate dynamic insights from state
+        fs = state.params.sampling.fs;
+        L = state.params.quantization.levels;
+        N = round(log2(L));
+        bit_rate = fs * N;
+        bandwidth = bit_rate / 2.0;
+        
         lines = [lines;
                  "4. PCM ENCODING";
                  "";
@@ -210,7 +299,14 @@ function ui_render_education(module_name, state)
                  "- Confusing sampling frequency (samples/s) with";
                  "  bit rate (bits/s).";
                  "- Forgetting that increasing bits per sample improves";
-                 "  fidelity but requires higher transmission bandwidth."];
+                 "  fidelity but requires higher transmission bandwidth.";
+                 "";
+                 "--- LIVE ENGINEERING INSIGHTS ---";
+                 sprintf("  Sampling Freq (fs)  : %.2f Hz", fs);
+                 sprintf("  Bits per Sample (N) : %d bits", N);
+                 sprintf("  PCM Bit Rate (Rb)   : %.2f bps", bit_rate);
+                 sprintf("  Min Bandwidth (Nyquist): %.2f Hz", bandwidth);
+                 sprintf("  Status              : ● Simulation Ready")];
  
     case "linecoding"
         lines = [lines;

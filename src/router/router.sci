@@ -294,6 +294,9 @@ function pipeline_update(start_stage)
     if exists("ui_render_education") then
         ui_render_education(state.active_module, state);
     end
+    
+    // Flush graphics queue to update all plots immediately
+    drawnow();
 endfunction
 
 function ui_set_panel_visible(state, module_name, is_visible_str)

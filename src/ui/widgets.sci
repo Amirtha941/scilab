@@ -83,6 +83,72 @@ function ui_create_status_bar(fig, status_panel)
     fig.user_data = state;
 endfunction
 
+function [status_str, status_color] = get_simulation_status(module_name, state)
+    colors = get_theme_colors();
+    
+    resolved_name = module_name;
+    if module_name == "sampling_uniform" | module_name == "sampling_recon" then
+        resolved_name = "sampling";
+    elseif module_name == "quant_uniform" | module_name == "quant_nonuniform" then
+        resolved_name = "quantization";
+    elseif module_name == "pcm_encoder" | module_name == "pcm_serialized" then
+        resolved_name = "pcm";
+    end
+    
+    select resolved_name
+    case "signal_generator"
+        fm = state.params.signal.freq;
+        amp = state.params.signal.amp;
+        if fm < 1.0 | fm > 20.0 | amp < 0.1 | amp > 10.0 then
+            status_str = "⚠ Parameter Outside Recommended Range";
+            status_color = colors.accent_yellow;
+        else
+            status_str = "● Signal Configuration Ready";
+            status_color = colors.accent_cyan;
+        end
+        
+    case "sampling"
+        fm = state.params.signal.freq;
+        fs = state.params.sampling.fs;
+        if fs < 2.0 * fm then
+            status_str = "⚠ Aliasing Detected";
+            status_color = colors.accent_red;
+        else
+            status_str = "✓ Nyquist Criterion Satisfied";
+            status_color = colors.accent_green;
+        end
+        
+    case "quantization"
+        L = state.params.quantization.levels;
+        amp = state.params.signal.amp;
+        N = round(log2(L));
+        if (L <> 2 & L <> 4 & L <> 8 & L <> 16 & L <> 32 & L <> 64) | (2^N <> L) | (amp <= 0) then
+            status_str = "⚠ Invalid Quantization Parameters";
+            status_color = colors.accent_red;
+        else
+            status_str = "✓ Valid Quantization Configuration";
+            status_color = colors.accent_green;
+        end
+        
+    case "pcm"
+        fs = state.params.sampling.fs;
+        L = state.params.quantization.levels;
+        N = round(log2(L));
+        Rb = fs * N;
+        if fs <= 0 | N <= 0 | Rb <= 0 then
+            status_str = "⚠ Invalid PCM Parameters";
+            status_color = colors.accent_red;
+        else
+            status_str = "● Simulation Ready";
+            status_color = colors.accent_green;
+        end
+        
+    else
+        status_str = "● Simulation Ready";
+        status_color = colors.accent_cyan;
+    end
+endfunction
+
 function widgets_update_status_bar(state)
     // Updates strings and indicators in the status bar from current state data.
     // Inputs:
@@ -110,8 +176,9 @@ function widgets_update_status_bar(state)
     end
     
     if pipeline_ok then
-        set(h_status, "string", "Pipeline Status: OK");
-        set(h_status, "BackgroundColor", colors.accent_green);
+        [status_str, status_color] = get_simulation_status(state.active_module, state);
+        set(h_status, "string", "Status: " + status_str);
+        set(h_status, "BackgroundColor", status_color);
     else
         set(h_status, "string", "Pipeline Error!");
         set(h_status, "BackgroundColor", colors.accent_red);
